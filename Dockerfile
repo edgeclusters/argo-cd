@@ -90,7 +90,9 @@ FROM docker.io/library/node:12.18.4 as argocd-ui
 WORKDIR /src
 ADD ["ui/package.json", "ui/yarn.lock", "./"]
 
-RUN yarn install
+# network timeout added to fix the 'There appears to be trouble with your network connection. Retrying...'
+# problem appearing during ARM builds in QEMU
+RUN yarn install --network-timeout 1000000
 
 ADD ["ui/", "."]
 
