@@ -224,6 +224,13 @@ func (s *Server) Update(ctx context.Context, q *cluster.ClusterUpdateRequest) (*
 		}
 	}
 
+	if len(q.UpdatedFields) == 0 || sets.NewString(q.UpdatedFields...).Has("project") {
+		// verify that user can do update inside project where cluster will be located
+		if err := s.enf.EnforceErr(ctx.Value("claims"), rbacpolicy.ResourceClusters, rbacpolicy.ActionUpdate, createRBACObject(q.Cluster.Project, q.Cluster.Server)); err != nil {
+			return nil, err
+		}
+	}
+
 	if len(q.UpdatedFields) != 0 {
 		for _, path := range q.UpdatedFields {
 			if updater, ok := clusterFieldsByPath[path]; ok {

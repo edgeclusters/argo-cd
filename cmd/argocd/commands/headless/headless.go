@@ -140,7 +140,7 @@ func InitCommand(cmd *cobra.Command, clientOpts *argoapi.ClientOptions, port *in
 			Cache:         servercache.NewCache(appstateCache, 0, 0, 0),
 			KubeClientset: kubeClientset,
 			Insecure:      true,
-			ListenHost:    *address,
+			ListenHost:    "localhost",
 			RepoClientset: &forwardRepoClientset{namespace: namespace, context: context},
 		})
 

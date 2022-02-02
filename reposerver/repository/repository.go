@@ -372,7 +372,7 @@ func (s *Service) runManifestGen(ctx context.Context, repoRoot, commitSHA, cache
 		MostRecentError:                 "",
 	}
 	manifestGenResult.Revision = commitSHA
-	manifestGenResult.VerifyResult = opContext.verificationResult
+	manifestGenResult.VerifyResult = ctx.verificationResult
 	err = s.cache.SetManifests(cacheKey, q.ApplicationSource, q, q.Namespace, q.TrackingMethod, q.AppLabelKey, q.AppName, &manifestGenCacheEntry)
 	if err != nil {
 		log.Warnf("manifest cache set error %s/%s: %v", q.ApplicationSource.String(), cacheKey, err)
