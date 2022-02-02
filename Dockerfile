@@ -1,10 +1,10 @@
-ARG BASE_IMAGE=docker.io/library/ubuntu:21.04
+ARG BASE_IMAGE=docker.io/library/ubuntu:21.10
 ####################################################################################################
 # Builder image
 # Initial stage which pulls prepares build dependencies and CLI tooling we need for our final image
 # Also used as the image in CI jobs so needs all dependencies
 ####################################################################################################
-FROM docker.io/library/golang:1.16.11 as builder
+FROM docker.io/library/golang:1.17.6 as builder
 
 RUN echo 'deb http://deb.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
@@ -92,9 +92,7 @@ FROM docker.io/library/node:12.18.4 as argocd-ui
 WORKDIR /src
 ADD ["ui/package.json", "ui/yarn.lock", "./"]
 
-# network timeout added to fix the 'There appears to be trouble with your network connection. Retrying...'
-# problem appearing during ARM builds in QEMU
-RUN yarn install --network-timeout 1000000
+RUN yarn install --network-timeout 100000
 
 ADD ["ui/", "."]
 
@@ -105,7 +103,7 @@ RUN HOST_ARCH='amd64' NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTION
 ####################################################################################################
 # Argo CD Build stage which performs the actual build of Argo CD binaries
 ####################################################################################################
-FROM docker.io/library/golang:1.16.11 as argocd-build
+FROM docker.io/library/golang:1.17.6 as argocd-build
 
 WORKDIR /go/src/github.com/argoproj/argo-cd
 
