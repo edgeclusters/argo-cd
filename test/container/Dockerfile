@@ -1,8 +1,8 @@
-FROM redis:6.2.6 as redis
+FROM redis:6.2.6-alpine as redis
 
 FROM node:12.18.4 as node
 
-FROM golang:1.17.6 as golang
+FROM golang:1.16.11 as golang
 
 FROM registry:2.7.1 as registry
 
