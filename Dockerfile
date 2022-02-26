@@ -54,7 +54,6 @@ RUN groupadd -g 999 argocd && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY hack/git-ask-pass.sh /usr/local/bin/git-ask-pass.sh
 COPY hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=builder /usr/local/bin/ks /usr/local/bin/ks
@@ -92,7 +91,7 @@ FROM docker.io/library/node:12.18.4 as argocd-ui
 WORKDIR /src
 ADD ["ui/package.json", "ui/yarn.lock", "./"]
 
-RUN yarn install --network-timeout 100000
+RUN yarn install --network-timeout 200000
 
 ADD ["ui/", "."]
 
