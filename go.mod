@@ -4,15 +4,14 @@ go 1.17
 
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
-	github.com/Masterminds/semver/v3 v3.1.1
+	github.com/Masterminds/semver v1.5.0
 	github.com/TomOnTime/utfutil v0.0.0-20180511104225-09c41003ee1d
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/alicebob/miniredis/v2 v2.14.2
-	github.com/argoproj/gitops-engine v0.5.1-0.20220126184517-b0c5e00ccfa5
-	github.com/argoproj/notifications-engine v0.3.1-0.20220127183449-91deed20b998
+	github.com/argoproj/gitops-engine v0.5.2
 	github.com/argoproj/pkg v0.11.1-0.20211203175135-36c59d8fafe0
-	github.com/bombsimon/logrusr/v2 v2.0.1
-	github.com/bradleyfalzon/ghinstallation/v2 v2.0.4
+	github.com/bombsimon/logrusr v1.0.0
+	github.com/bradleyfalzon/ghinstallation/v2 v2.0.2
 	github.com/casbin/casbin/v2 v2.39.1
 	github.com/chai2010/gettext-go v0.0.0-20170215093142-bf70f2a70fb1 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible

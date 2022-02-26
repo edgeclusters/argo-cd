@@ -374,7 +374,7 @@ func (s *Service) runManifestGen(ctx context.Context, repoRoot, commitSHA, cache
 		MostRecentError:                 "",
 	}
 	manifestGenResult.Revision = commitSHA
-	manifestGenResult.VerifyResult = opContext.verificationResult
+	manifestGenResult.VerifyResult = ctx.verificationResult
 	err = s.cache.SetManifests(cacheKey, q.ApplicationSource, q, q.Namespace, q.TrackingMethod, q.AppLabelKey, q.AppName, &manifestGenCacheEntry)
 	if err != nil {
 		log.Warnf("manifest cache set error %s/%s: %v", q.ApplicationSource.String(), cacheKey, err)
@@ -727,19 +727,9 @@ func helmTemplate(appPath string, repoRoot string, env *v1alpha1.Env, q *apiclie
 		for _, val := range appHelm.ValueFiles {
 
 			// This will resolve val to an absolute path (or an URL)
-			path, isRemote, err := resolveHelmValueFilePath(appPath, repoRoot, val, allowedHelmRemoteProtocols)
+			path, _, err := resolveHelmValueFilePath(appPath, repoRoot, val, allowedHelmRemoteProtocols)
 			if err != nil {
 				return nil, err
-			}
-
-			if !isRemote {
-				_, err = os.Stat(path)
-				if os.IsNotExist(err) {
-					if appHelm.IgnoreMissingValueFiles {
-						log.Debugf(" %s values file does not exist", path)
-						continue
-					}
-				}
 			}
 
 			templateOpts.Values = append(templateOpts.Values, path)
