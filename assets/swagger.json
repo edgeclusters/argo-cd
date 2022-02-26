@@ -2744,6 +2744,16 @@
             "type": "string",
             "name": "revision",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "appName",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "appProject",
+            "in": "query"
           }
         ],
         "responses": {
@@ -3733,6 +3743,9 @@
         "statusBadgeEnabled": {
           "type": "boolean"
         },
+        "statusBadgeRootUrl": {
+          "type": "string"
+        },
         "trackingMethod": {
           "type": "string"
         },
@@ -4103,6 +4116,9 @@
       "title": "RepoAppDetailsQuery contains query information for app details request",
       "properties": {
         "appName": {
+          "type": "string"
+        },
+        "appProject": {
           "type": "string"
         },
         "source": {
