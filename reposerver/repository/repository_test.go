@@ -1709,73 +1709,36 @@ func Test_getHelmDependencyRepos(t *testing.T) {
 	assert.Equal(t, repos[1].Repo, repo2)
 }
 
-func TestResolveRevision(t *testing.T) {
-
-	service := newService(".")
-	repo := &argoappv1.Repository{Repo: "https://github.com/argoproj/argo-cd"}
-	app := &argoappv1.Application{}
-	resolveRevisionResponse, err := service.ResolveRevision(context.Background(), &apiclient.ResolveRevisionRequest{
-		Repo:              repo,
-		App:               app,
-		AmbiguousRevision: "v2.2.2",
-	})
-
-	expectedResolveRevisionResponse := &apiclient.ResolveRevisionResponse{
-		Revision:          "03b17e0233e64787ffb5fcf65c740cc2a20822ba",
-		AmbiguousRevision: "v2.2.2 (03b17e0233e64787ffb5fcf65c740cc2a20822ba)",
+func Test_resolveSymlinkRecursive(t *testing.T) {
+	testsDir, err := filepath.Abs("./testdata/symlinks")
+	if err != nil {
+		panic(err)
 	}
-
-	assert.NotNil(t, resolveRevisionResponse.Revision)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedResolveRevisionResponse, resolveRevisionResponse)
-
-}
-
-func TestResolveRevisionNegativeScenarios(t *testing.T) {
-
-	service := newService(".")
-	repo := &argoappv1.Repository{Repo: "https://github.com/argoproj/argo-cd"}
-	app := &argoappv1.Application{}
-	resolveRevisionResponse, err := service.ResolveRevision(context.Background(), &apiclient.ResolveRevisionRequest{
-		Repo:              repo,
-		App:               app,
-		AmbiguousRevision: "v2.a.2",
+	t.Run("Resolve non-symlink", func(t *testing.T) {
+		r, err := resolveSymbolicLinkRecursive(testsDir+"/foo", 2)
+		assert.NoError(t, err)
+		assert.Equal(t, testsDir+"/foo", r)
 	})
-
-	expectedResolveRevisionResponse := &apiclient.ResolveRevisionResponse{
-		Revision:          "",
-		AmbiguousRevision: "",
-	}
-
-	assert.NotNil(t, resolveRevisionResponse.Revision)
-	assert.NotNil(t, err)
-	assert.Equal(t, expectedResolveRevisionResponse, resolveRevisionResponse)
-
-}
-
-func TestDirectoryPermissionInitializer(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
-
-	file, err := ioutil.TempFile(dir, "")
-	require.NoError(t, err)
-	io.Close(file)
-
-	// remove read permissions
-	assert.NoError(t, os.Chmod(dir, 0000))
-	closer := directoryPermissionInitializer(dir)
-
-	// make sure permission are restored
-	_, err = ioutil.ReadFile(file.Name())
-	require.NoError(t, err)
-
-	// make sure permission are removed by closer
-	io.Close(closer)
-	_, err = ioutil.ReadFile(file.Name())
-	require.Error(t, err)
+	t.Run("Successfully resolve symlink", func(t *testing.T) {
+		r, err := resolveSymbolicLinkRecursive(testsDir+"/bar", 2)
+		assert.NoError(t, err)
+		assert.Equal(t, testsDir+"/foo", r)
+	})
+	t.Run("Do not allow symlink at all", func(t *testing.T) {
+		r, err := resolveSymbolicLinkRecursive(testsDir+"/bar", 0)
+		assert.Error(t, err)
+		assert.Equal(t, "", r)
+	})
+	t.Run("Error because too nested symlink", func(t *testing.T) {
+		r, err := resolveSymbolicLinkRecursive(testsDir+"/bam", 2)
+		assert.Error(t, err)
+		assert.Equal(t, "", r)
+	})
+	t.Run("No such file or directory", func(t *testing.T) {
+		r, err := resolveSymbolicLinkRecursive(testsDir+"/foobar", 2)
+		assert.NoError(t, err)
+		assert.Equal(t, testsDir+"/foobar", r)
+	})
 }
 
 func initGitRepo(repoPath string, remote string) error {
