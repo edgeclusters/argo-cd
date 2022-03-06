@@ -71,6 +71,14 @@ The Argo CD UI/CLI/API allows to manage ApplicationSet resources same as Argo CD
 The [Argo CD Image Updater](https://github.com/argoproj-labs/argocd-image-updater) should be merged into Argo CD and available out-of-the-box: [#7385](https://github.com/argoproj/argo-cd/issues/7385)
 
 
+### Support multiple sources for an Application
+
+Support more than one source for creating an Application [#8322](https://github.com/argoproj/argo-cd/pull/8322).
+
+### Sharding application controller 
+
+Application controller to scale automatically to provide high availability[#8340](https://github.com/argoproj/argo-cd/issues/8340).
+
 ### Add support for secrets in Application parameters
 
 The feature allows referencing secrets in Application parameters. [#1786](https://github.com/argoproj/argo-cd/issues/1786).
@@ -93,6 +101,7 @@ The feature allows specifying dependencies between applications that allow orche
 ### Multi-tenancy improvements
 
 The multi-tenancy improvements that allow end-users to create Argo CD applications using Kubernetes directly without accessing Argo CD API.
+
 * [Applications outside argocd namespace](https://github.com/argoproj/argo-cd/pull/6409)
 * [AppSource](https://github.com/argoproj-labs/appsource)
 
