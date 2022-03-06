@@ -23,11 +23,11 @@ func TestAppType(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Kustomize", appType)
 
-	appType, err = AppType(context.Background(), "./testdata/baz", map[string]bool{})
+	appType, err = AppType(context.Background(), "./testdata/bar", map[string]bool{})
 	assert.NoError(t, err)
 	assert.Equal(t, "Helm", appType)
 
-	appType, err = AppType(context.Background(), "./testdata", map[string]bool{})
+	appType, err = AppType(context.Background(), "./testdata/baz", map[string]bool{})
 	assert.NoError(t, err)
 	assert.Equal(t, "Directory", appType)
 }
@@ -38,6 +38,29 @@ func TestAppType_Disabled(t *testing.T) {
 		string(v1alpha1.ApplicationSourceTypeHelm):      false,
 	}
 	appType, err := AppType(context.Background(), "./testdata/foo", enableManifestGeneration)
+	assert.NoError(t, err)
+	assert.Equal(t, "Directory", appType)
+
+	appType, err = AppType(context.Background(), "./testdata/baz", enableManifestGeneration)
+	assert.NoError(t, err)
+	assert.Equal(t, "Directory", appType)
+
+	appType, err = AppType(context.Background(), "./testdata", map[string]bool{})
+	assert.NoError(t, err)
+	assert.Equal(t, "Directory", appType)
+}
+
+func TestAppType_Disabled(t *testing.T) {
+	enableManifestGeneration := map[string]bool{
+		string(v1alpha1.ApplicationSourceTypeKustomize): false,
+		string(v1alpha1.ApplicationSourceTypeKsonnet):   false,
+		string(v1alpha1.ApplicationSourceTypeHelm):      false,
+	}
+	appType, err := AppType(context.Background(), "./testdata/foo", enableManifestGeneration)
+	assert.NoError(t, err)
+	assert.Equal(t, "Directory", appType)
+
+	appType, err = AppType(context.Background(), "./testdata/bar", enableManifestGeneration)
 	assert.NoError(t, err)
 	assert.Equal(t, "Directory", appType)
 

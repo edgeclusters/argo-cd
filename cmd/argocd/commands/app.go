@@ -828,8 +828,16 @@ func NewApplicationDiffCommand(clientOpts *argocdclient.ClientOptions) *cobra.Co
 			defer argoio.Close(conn)
 			argoSettings, err := settingsIf.Get(context.Background(), &settingspkg.SettingsQuery{})
 			errors.CheckError(err)
-			diffOption := &DifferenceOption{}
-			if revision != "" {
+
+			if local != "" {
+				conn, clusterIf := clientset.NewClusterClientOrDie()
+				defer argoio.Close(conn)
+				cluster, err := clusterIf.Get(context.Background(), &clusterpkg.ClusterQuery{Name: app.Spec.Destination.Name, Server: app.Spec.Destination.Server})
+				errors.CheckError(err)
+				localObjs := groupObjsByKey(getLocalObjects(app, local, localRepoRoot, argoSettings.AppLabelKey, cluster.Info.ServerVersion, cluster.Info.APIVersions, argoSettings.KustomizeOptions, argoSettings.ConfigManagementPlugins, argoSettings.TrackingMethod), liveObjs, app.Spec.Destination.Namespace)
+				items = groupObjsForDiff(resources, localObjs, items, argoSettings, appName)
+			} else if revision != "" {
+				var unstructureds []*unstructured.Unstructured
 				q := applicationpkg.ApplicationManifestQuery{
 					Name:     &appName,
 					Revision: revision,
@@ -1409,10 +1417,6 @@ func NewApplicationSyncCommand(clientOpts *argocdclient.ClientOptions) *cobra.Co
 					errors.CheckError(err)
 					argoio.Close(conn)
 					localObjsStrings = getLocalObjectsString(app, local, localRepoRoot, argoSettings.AppLabelKey, cluster.Info.ServerVersion, cluster.Info.APIVersions, argoSettings.KustomizeOptions, argoSettings.ConfigManagementPlugins, argoSettings.TrackingMethod)
-					errors.CheckError(err)
-					diffOption.local = local
-					diffOption.localRepoRoot = localRepoRoot
-					diffOption.cluster = cluster
 				}
 
 				syncOptionsFactory := func() *applicationpkg.SyncOptions {

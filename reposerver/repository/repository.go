@@ -53,6 +53,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/helm"
 	"github.com/argoproj/argo-cd/v2/util/io"
 	pathutil "github.com/argoproj/argo-cd/v2/util/io/path"
+	"github.com/argoproj/argo-cd/v2/util/ksonnet"
 	"github.com/argoproj/argo-cd/v2/util/kustomize"
 	"github.com/argoproj/argo-cd/v2/util/text"
 )
@@ -1458,6 +1459,33 @@ func (s *Service) createGetAppDetailsCacheHandler(res *apiclient.RepoAppDetailsR
 		}
 		return false, nil
 	}
+}
+
+func populateKsonnetAppDetails(res *apiclient.RepoAppDetailsResponse, appPath string, q *apiclient.RepoServerAppDetailsQuery) error {
+	var ksonnetAppSpec apiclient.KsonnetAppSpec
+	data, err := ioutil.ReadFile(filepath.Join(appPath, "app.yaml"))
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(data, &ksonnetAppSpec)
+	if err != nil {
+		return err
+	}
+	ksApp, err := ksonnet.NewKsonnetApp(appPath)
+	if err != nil {
+		return status.Errorf(codes.FailedPrecondition, "unable to load application from %s: %v", appPath, err)
+	}
+	env := ""
+	if q.Source.Ksonnet != nil {
+		env = q.Source.Ksonnet.Environment
+	}
+	params, err := ksApp.ListParams(env)
+	if err != nil {
+		return err
+	}
+	ksonnetAppSpec.Parameters = params
+	res.Ksonnet = &ksonnetAppSpec
+	return nil
 }
 
 func populateHelmAppDetails(res *apiclient.RepoAppDetailsResponse, appPath string, repoRoot string, q *apiclient.RepoServerAppDetailsQuery) error {

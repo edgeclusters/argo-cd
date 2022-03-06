@@ -394,8 +394,6 @@ const (
 	partOfArgoCDSelector = "app.kubernetes.io/part-of=argocd"
 	// settingsPasswordPatternKey is the key to configure user password regular expression
 	settingsPasswordPatternKey = "passwordPattern"
-	// inClusterEnabledKey is the key to configure whether to allow in-cluster server address
-	inClusterEnabledKey = "cluster.inClusterEnabled"
 	// helmValuesFileSchemesKey is the key to configure the list of supported helm values file schemas
 	helmValuesFileSchemesKey = "helm.valuesFileSchemes"
 )
@@ -405,6 +403,7 @@ var (
 		v1alpha1.ApplicationSourceTypeKustomize: "kustomize.enable",
 		v1alpha1.ApplicationSourceTypeHelm:      "helm.enable",
 		v1alpha1.ApplicationSourceTypeDirectory: "jsonnet.enable",
+		v1alpha1.ApplicationSourceTypeKsonnet:   "ksonnet.enable",
 	}
 )
 

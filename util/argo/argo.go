@@ -242,6 +242,26 @@ func ValidateRepo(
 	if err != nil {
 		return nil, err
 	}
+	// get the app details, and populate the Ksonnet stuff from it
+	appDetails, err := repoClient.GetAppDetails(ctx, &apiclient.RepoServerAppDetailsQuery{
+		Repo:             repo,
+		Source:           &spec.Source,
+		Repos:            permittedHelmRepos,
+		KustomizeOptions: kustomizeOptions,
+		// don't use case during application change to make sure to fetch latest git/helm revisions
+		NoRevisionCache: true,
+		TrackingMethod:  string(GetTrackingMethod(settingsMgr)),
+		HelmOptions:     helmOptions,
+	})
+	if err != nil {
+		conditions = append(conditions, argoappv1.ApplicationCondition{
+			Type:    argoappv1.ApplicationConditionInvalidSpecError,
+			Message: fmt.Sprintf("Unable to get app details: %v", err),
+		})
+		return conditions, nil
+	}
+
+	enrichSpec(spec, appDetails)
 
 	cluster, err := db.GetCluster(context.Background(), spec.Destination.Server)
 	if err != nil {

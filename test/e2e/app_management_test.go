@@ -710,6 +710,40 @@ func testEdgeCasesApplicationResources(t *testing.T, appPath string, statusCode 
 		})
 }
 
+func TestKsonnetApp(t *testing.T) {
+	SkipOnEnv(t, "KSONNET")
+	Given(t).
+		Path("ksonnet").
+		Env("prod").
+		// Null out dest server to verify that destination is inferred from ksonnet app
+		Parameter("guestbook-ui=image=gcr.io/heptio-images/ks-guestbook-demo:0.1").
+		DestServer("").
+		When().
+		CreateApp().
+		Sync().
+		Then().
+		And(func(app *Application) {
+			closer, client, err := ArgoCDClientset.NewRepoClient()
+			assert.NoError(t, err)
+			defer io.Close(closer)
+
+			details, err := client.GetAppDetails(context.Background(), &repositorypkg.RepoAppDetailsQuery{
+				AppName:    app.Name,
+				AppProject: app.Spec.Project,
+				Source:     &app.Spec.Source,
+			})
+			assert.NoError(t, err)
+
+			serviceType := ""
+			for _, param := range details.Ksonnet.Parameters {
+				if param.Name == "type" && param.Component == "guestbook-ui" {
+					serviceType = param.Value
+				}
+			}
+			assert.Equal(t, serviceType, "LoadBalancer")
+		})
+}
+
 const actionsConfig = `discovery.lua: return { sample = {} }
 definitions:
 - name: sample

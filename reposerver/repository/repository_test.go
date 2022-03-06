@@ -283,6 +283,25 @@ func TestGenerateJsonnetLibOutside(t *testing.T) {
 	require.Contains(t, err.Error(), "value file '../../../testdata/jsonnet/vendor' resolved to outside repository root")
 }
 
+func TestGenerateKsonnetManifest(t *testing.T) {
+	service := newService("../..")
+
+	q := apiclient.ManifestRequest{
+		Repo: &argoappv1.Repository{},
+		ApplicationSource: &argoappv1.ApplicationSource{
+			Path: "./testdata/jsonnet",
+			Directory: &argoappv1.ApplicationSourceDirectory{
+				Jsonnet: argoappv1.ApplicationSourceJsonnet{
+					Libs: []string{"../../../testdata/jsonnet/vendor"},
+				},
+			},
+		},
+	}
+	_, err := service.GenerateManifest(context.Background(), &q)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "value file '../../../testdata/jsonnet/vendor' resolved to outside repository root")
+}
+
 func TestGenerateHelmChartWithDependencies(t *testing.T) {
 	service := newService("../..")
 
@@ -1702,6 +1721,70 @@ func Test_resolveSymlinkRecursive(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, testsDir+"/foobar", r)
 	})
+}
+
+func initGitRepo(repoPath string, remote string) error {
+	if err := os.Mkdir(repoPath, 0755); err != nil {
+		return err
+	}
+
+	cmd := exec.Command("git", "init", repoPath)
+	cmd.Dir = repoPath
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	cmd = exec.Command("git", "remote", "add", "origin", remote)
+	cmd.Dir = repoPath
+	return cmd.Run()
+}
+
+func TestInit(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	require.NoError(t, err)
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	repoPath := path.Join(dir, "repo1")
+	require.NoError(t, initGitRepo(repoPath, "https://github.com/argo-cd/test-repo1"))
+
+	service := newService(".")
+	service.rootDir = dir
+
+	require.NoError(t, service.Init())
+
+	repo1Path, err := service.gitRepoPaths.GetPath(git.NormalizeGitURL("https://github.com/argo-cd/test-repo1"))
+	assert.NoError(t, err)
+	assert.Equal(t, repoPath, repo1Path)
+
+	_, err = ioutil.ReadDir(dir)
+	require.Error(t, err)
+	require.NoError(t, initGitRepo(path.Join(dir, "repo2"), "https://github.com/argo-cd/test-repo2"))
+}
+
+func TestDirectoryPermissionInitializer(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	require.NoError(t, err)
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	file, err := ioutil.TempFile(dir, "")
+	require.NoError(t, err)
+	io.Close(file)
+
+	// remove read permissions
+	assert.NoError(t, os.Chmod(dir, 0000))
+	closer := directoryPermissionInitializer(dir)
+
+	// make sure permission are restored
+	_, err = ioutil.ReadFile(file.Name())
+	require.NoError(t, err)
+
+	// make sure permission are removed by closer
+	io.Close(closer)
+	_, err = ioutil.ReadFile(file.Name())
+	require.Error(t, err)
 }
 
 func initGitRepo(repoPath string, remote string) error {
